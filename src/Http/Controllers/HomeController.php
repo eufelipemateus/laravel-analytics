@@ -52,6 +52,24 @@ class HomeController extends Controller
     {
         return [
             [
+                'key' => 'Last 10 minutes',
+                'value' => PageView::query()
+                    ->scopes($this->scopes)
+                    ->where('created_at', '>=', now()->subMinutes(10))
+                    ->groupBy('session')
+                    ->pluck('session')
+                    ->count(),
+            ],
+            [
+                'key' => 'Last 1 hour',
+                'value' => PageView::query()
+                    ->scopes($this->scopes)
+                    ->where('created_at', '>=', now()->subHour())
+                    ->groupBy('session')
+                    ->pluck('session')
+                    ->count(),
+            ],
+            [
                 'key' => 'Unique Users',
                 'value' => PageView::query()
                     ->scopes($this->scopes)
