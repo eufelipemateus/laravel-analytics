@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Model;
 
 class PageView extends Model
 {
+    /**
+     * The table associated with the model.
+     *
+     * @var string
+     */
+    protected $table = 'analytics_page_views';
+
     /** @var array */
     protected $fillable = [
         'session',
