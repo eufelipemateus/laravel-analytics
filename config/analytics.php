@@ -86,4 +86,11 @@ return [
         'provider' => \AndreasElia\Analytics\RequestSessionProvider::class,
     ],
 
+    /**
+     * Graph.
+     *
+     * Determine if the analytics graph should be displayed.
+     */
+    'analyticsGraph' => env('ANALYTICS_GRAPH_ENABLED', true),
+
 ];

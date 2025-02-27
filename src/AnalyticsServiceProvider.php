@@ -5,12 +5,17 @@ namespace AndreasElia\Analytics;
 use AndreasElia\Analytics\Http\Middleware\Analytics;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use AndreasElia\Analytics\Console\UpdatePagesViewSstatitics;
 
 class AnalyticsServiceProvider extends ServiceProvider
 {
     public function boot(): void
     {
         if ($this->app->runningInConsole()) {
+            $this->commands([
+                UpdatePagesViewSstatitics::class,
+            ]);
+    
             $this->publishes([
                 __DIR__.'/../config/analytics.php' => config_path('analytics.php'),
             ], 'analytics-config');

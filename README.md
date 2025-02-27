@@ -45,6 +45,15 @@ protected $middleware = [
 ];
 ```
 
+
+Add app/Console/Kernel.php
+
+```php
+    $schedule->command('app:update-pages-view-statitics')->everyTenMinutes();
+
+```
+
+
 ## Configuration
 
 ### Disabling tracking

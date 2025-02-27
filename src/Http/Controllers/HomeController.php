@@ -8,6 +8,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
+use AndreasElia\Analytics\Models\AnalyticsPageViewStatistics;
 
 class HomeController extends Controller
 {
@@ -33,6 +34,7 @@ class HomeController extends Controller
             'users' => $this->users(),
             'devices' => $this->devices(),
             'utm' => $this->utm(),
+            'graph' => $this->graph(),
         ]);
     }
 
@@ -51,6 +53,22 @@ class HomeController extends Controller
     protected function stats(): array
     {
         return [
+            [
+                'key' => 'Last 10 minutes',
+                'value' => PageView::query()
+                    ->where('created_at', '>=', now()->subMinutes(10))
+                    ->groupBy('session')
+                    ->pluck('session')
+                    ->count(),
+            ],
+            [
+                'key' => 'Last 1 hour',
+                'value' => PageView::query()
+                    ->where('created_at', '>=', now()->subHour())
+                    ->groupBy('session')
+                    ->pluck('session')
+                    ->count(),
+            ],
             [
                 'key' => 'Unique Users',
                 'value' => PageView::query()
@@ -144,5 +162,33 @@ class HomeController extends Controller
                     ]),
             ]])
             ->filter(fn (array $set) => $set['items']->count() > 0);
+    }
+
+    protected function graph(): object
+    {
+        $stats = AnalyticsPageViewStatistics::query()
+            ->select('time_window', 'page', DB::raw('SUM(page_views) as total_views'))
+            ->scopes($this->scopes)
+            ->groupBy('time_window', 'page')
+            ->orderBy('total_views', 'desc')
+            ->get();
+        
+        $groupedData = $stats->groupBy('page');
+
+        $chartData = [
+            'labels' => $stats->pluck('time_window')->unique()->sort()->values()->map(fn($t) => date('H:i', strtotime($t))),
+            'datasets' => $groupedData->take(10)->map(
+                function ($group, $page) {
+                    return [
+                        'label' => $page,
+                        'data' => $group->pluck('total_views'),
+                        'borderColor' => '#' . substr(md5($page), 0, 6),
+                        'fill' => false,
+                    ];
+                }
+            )->values()
+        ];
+
+        return (object) $chartData;
     }
 }
