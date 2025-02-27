@@ -11,6 +11,10 @@
         {
             "name": "Tom Irons",
             "email": "tom@irons.pw"
+        },
+        {
+            "name": "Felipe Mateus",
+            "email": "contato@felipemateus.com"
         }
     ],
     "require": {
