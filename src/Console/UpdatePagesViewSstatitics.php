@@ -27,7 +27,9 @@ class UpdatePagesViewSstatitics extends Command
      */
     public function handle()
     {
-        UpdateAnalyticsPageViewStatisticsJob::dispatch()->onQueue('default');;
+        if (config('analytics.analyticsGraph')) {
+            UpdateAnalyticsPageViewStatisticsJob::dispatch()->onQueue('default');
+        }
 
     }
 }
