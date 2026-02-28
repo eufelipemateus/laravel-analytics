@@ -47,7 +47,12 @@ class PageView extends Model
 
     public function setCountryAttribute($value): void
     {
-        $this->attributes['country'] = \Locale::getDisplayRegion($value, 'en');
+        if (class_exists('Locale')) {
+            $this->attributes['country'] = \Locale::getDisplayRegion($value, 'en');
+        } else {
+            // Fallback: salva o valor original se Locale não estiver disponível
+            $this->attributes['country'] = $value;
+        }
     }
 
     public function getTypeAttribute($value): string
