@@ -44,6 +44,14 @@ class DashboardTest extends TestCase
             ->assertViewHas('period', 'today')
             ->assertViewHas('stats', [
                 [
+                    'key' => 'Last 10 minutes',
+                    'value' => 1,
+                ],
+                [
+                    'key' => 'Last 1 hour',
+                    'value' => 1,
+                ],
+                [
                     'key' => 'Unique Users',
                     'value' => 1,
                 ],
@@ -60,6 +68,14 @@ class DashboardTest extends TestCase
         $this->get(route('analytics', ['period' => 'yesterday']))
             ->assertViewHas('period', 'yesterday')
             ->assertViewHas('stats', [
+                [
+                    'key' => 'Last 10 minutes',
+                    'value' => 1,
+                ],
+                [
+                    'key' => 'Last 1 hour',
+                    'value' => 1,
+                ],
                 [
                     'key' => 'Unique Users',
                     'value' => 1,
@@ -78,6 +94,14 @@ class DashboardTest extends TestCase
             ->assertViewHas('period', '1_week')
             ->assertViewHas('stats', [
                 [
+                    'key' => 'Last 10 minutes',
+                    'value' => 1,
+                ],
+                [
+                    'key' => 'Last 1 hour',
+                    'value' => 1,
+                ],
+                [
                     'key' => 'Unique Users',
                     'value' => 3,
                 ],
@@ -94,6 +118,14 @@ class DashboardTest extends TestCase
         $this->get(route('analytics', ['period' => '30_days']))
             ->assertViewHas('period', '30_days')
             ->assertViewHas('stats', [
+                [
+                    'key' => 'Last 10 minutes',
+                    'value' => 1,
+                ],
+                [
+                    'key' => 'Last 1 hour',
+                    'value' => 1,
+                ],
                 [
                     'key' => 'Unique Users',
                     'value' => 4,
@@ -115,6 +147,14 @@ class DashboardTest extends TestCase
             ->assertViewHas('period', '30_days')
             ->assertViewHas('uri', '/test1')
             ->assertViewHas('stats', [
+                [
+                    'key' => 'Last 10 minutes',
+                    'value' => 1,
+                ],
+                [
+                    'key' => 'Last 1 hour',
+                    'value' => 1,
+                ],
                 [
                     'key' => 'Unique Users',
                     'value' => 1,
@@ -148,5 +188,25 @@ class DashboardTest extends TestCase
         ]))
             ->assertViewHas('sources', collect())
             ->assertDontSee('<h3 class="text-lg font-medium leading-6 text-gray-900">Sources</h3>', false);
+    }
+
+    #[Test]
+    public function it_falls_back_to_today_for_an_invalid_period()
+    {
+        $this->get(route('analytics', ['period' => 'invalid']))
+            ->assertOk()
+            ->assertViewHas('period', 'today');
+    }
+
+    #[Test]
+    public function it_ignores_array_filters()
+    {
+        $this->get(route('analytics', [
+            'period' => ['invalid'],
+            'uri' => ['invalid'],
+        ]))
+            ->assertOk()
+            ->assertViewHas('period', 'today')
+            ->assertViewHas('uri', null);
     }
 }

@@ -34,24 +34,28 @@ Route::middleware('analytics')->group(function () {
 });
 ```
 
-Or add the page view to all middlewares/on an application level like so:
+Or append the page view middleware to the `web` middleware group in `bootstrap/app.php`:
 
 ```php
-// app/Http/Kernel.php
+use AndreasElia\Analytics\Http\Middleware\Analytics;
+use Illuminate\Foundation\Configuration\Middleware;
 
-protected $middleware = [
-    // ...
-    \AndreasElia\Analytics\Http\Middleware\Analytics::class,
-];
+->withMiddleware(function (Middleware $middleware): void {
+    $middleware->web(append: [
+        Analytics::class,
+    ]);
+})
 ```
 
-
-Add app/Console/Kernel.php
+To update the graph statistics every ten minutes, add the schedule to `routes/console.php`:
 
 ```php
-    $schedule->command('app:update-pages-view-statitics')->everyTenMinutes();
+use Illuminate\Support\Facades\Schedule;
 
+Schedule::command('analytics:update-page-view-statistics')->everyTenMinutes();
 ```
+
+The command dispatches a queued job. Keep a queue worker running unless your application uses the `sync` queue connection.
 
 
 ## Configuration
@@ -70,7 +74,7 @@ You can ignore requests from robots by setting the `ignoreRobots` property in th
 
 ### Ignore specific IP addresses
 
-You can ignore requests from specific IP addresses by adding them to the `ignoreIps` array in the `analytics.php` config file.
+You can ignore requests from specific IP addresses by adding them to the `ignoredIPs` array in the `analytics.php` config file.
 
 ### Masking routes
 
@@ -89,7 +93,7 @@ You can ignore the tracking of some methods by adding them to the `analytics.ign
 
 ### Changing how session_id is determined
 
-By default, `session_id` in the `page_views` table is filled with the session ID of the current request. However, in certain scenarios (for example, for API and other requests not using cookies), the session is unavailable.
+By default, `session` in the `analytics_page_views` table is filled with the session ID of the current request. However, in certain scenarios (for example, for API and other requests not using cookies), the session is unavailable.
 
 In these cases, you can create a custom session ID provider: create a class that implements the `AndreasElia\Analytics\Contracts\SessionProvider` interface and set its name as the `provider` option in the `analytics.php` config file. The configured class object is resolved from the container, therefore, dependency injection can be used via the `__constructor`.
 

@@ -2,13 +2,14 @@
 
 namespace AndreasElia\Analytics\Http\Controllers;
 
+use AndreasElia\Analytics\Models\AnalyticsPageViewStatistics;
 use AndreasElia\Analytics\Models\PageView;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\View\View;
-use AndreasElia\Analytics\Models\AnalyticsPageViewStatistics;
 
 class HomeController extends Controller
 {
@@ -18,6 +19,14 @@ class HomeController extends Controller
     {
         $period = $request->input('period', 'today');
         $uri = $request->input('uri');
+
+        if (! is_string($period) || ! array_key_exists($period, $this->periods())) {
+            $period = 'today';
+        }
+
+        if (! is_string($uri)) {
+            $uri = null;
+        }
 
         $this->scopes = [
             'filter' => [$period],
@@ -34,7 +43,7 @@ class HomeController extends Controller
             'users' => $this->users(),
             'devices' => $this->devices(),
             'utm' => $this->utm(),
-            'graph' => $this->graph(),
+            'graph' => config('analytics.analyticsGraph') ? $this->graph() : null,
         ]);
     }
 
@@ -57,25 +66,22 @@ class HomeController extends Controller
                 'key' => 'Last 10 minutes',
                 'value' => PageView::query()
                     ->where('created_at', '>=', now()->subMinutes(10))
-                    ->groupBy('session')
-                    ->pluck('session')
-                    ->count(),
+                    ->distinct()
+                    ->count('session'),
             ],
             [
                 'key' => 'Last 1 hour',
                 'value' => PageView::query()
                     ->where('created_at', '>=', now()->subHour())
-                    ->groupBy('session')
-                    ->pluck('session')
-                    ->count(),
+                    ->distinct()
+                    ->count('session'),
             ],
             [
                 'key' => 'Unique Users',
                 'value' => PageView::query()
                     ->scopes($this->scopes)
-                    ->groupBy('session')
-                    ->pluck('session')
-                    ->count(),
+                    ->distinct()
+                    ->count('session'),
             ],
             [
                 'key' => 'Page Views',
@@ -170,23 +176,42 @@ class HomeController extends Controller
             ->select('time_window', 'page', DB::raw('SUM(page_views) as total_views'))
             ->scopes($this->scopes)
             ->groupBy('time_window', 'page')
-            ->orderBy('total_views', 'desc')
+            ->orderBy('time_window')
             ->get();
-        
-        $groupedData = $stats->groupBy('page');
+
+        $timeWindows = $stats
+            ->pluck('time_window')
+            ->map(fn (Carbon $timeWindow): string => $timeWindow->toDateTimeString())
+            ->unique()
+            ->sort()
+            ->values();
+
+        $groupedData = $stats
+            ->groupBy('page')
+            ->sortByDesc(fn (Collection $group): int => $group->sum('total_views'));
 
         $chartData = [
-            'labels' => $stats->pluck('time_window')->unique()->sort()->values()->map(fn($t) => date('H:i', strtotime($t))),
+            'labels' => $timeWindows->map(
+                fn (string $timeWindow): string => Carbon::parse($timeWindow)->format('m-d H:i')
+            ),
             'datasets' => $groupedData->take(10)->map(
-                function ($group, $page) {
+                function (Collection $group, string $page) use ($timeWindows): array {
+                    $viewsByWindow = $group->mapWithKeys(
+                        fn (AnalyticsPageViewStatistics $stat): array => [
+                            $stat->time_window->toDateTimeString() => (int) $stat->total_views,
+                        ]
+                    );
+
                     return [
                         'label' => $page,
-                        'data' => $group->pluck('total_views'),
-                        'borderColor' => '#' . substr(md5($page), 0, 6),
+                        'data' => $timeWindows->map(
+                            fn (string $timeWindow): int => $viewsByWindow->get($timeWindow, 0)
+                        ),
+                        'borderColor' => '#'.substr(md5($page), 0, 6),
                         'fill' => false,
                     ];
                 }
-            )->values()
+            )->values(),
         ];
 
         return (object) $chartData;

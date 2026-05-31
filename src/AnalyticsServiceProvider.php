@@ -2,10 +2,10 @@
 
 namespace AndreasElia\Analytics;
 
+use AndreasElia\Analytics\Console\UpdatePageViewStatistics;
 use AndreasElia\Analytics\Http\Middleware\Analytics;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
-use AndreasElia\Analytics\Console\UpdatePagesViewSstatitics;
 
 class AnalyticsServiceProvider extends ServiceProvider
 {
@@ -13,9 +13,9 @@ class AnalyticsServiceProvider extends ServiceProvider
     {
         if ($this->app->runningInConsole()) {
             $this->commands([
-                UpdatePagesViewSstatitics::class,
+                UpdatePageViewStatistics::class,
             ]);
-    
+
             $this->publishes([
                 __DIR__.'/../config/analytics.php' => config_path('analytics.php'),
             ], 'analytics-config');
@@ -45,7 +45,6 @@ class AnalyticsServiceProvider extends ServiceProvider
     protected function routeConfig(): array
     {
         return [
-            'namespace' => 'AndreasElia\Analytics\Http\Controllers',
             'prefix' => config('analytics.prefix'),
             'middleware' => config('analytics.middleware'),
             'domain' => config('analytics.domain'),

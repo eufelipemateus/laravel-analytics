@@ -2,8 +2,8 @@
 
 namespace AndreasElia\Analytics\Models;
 
-use Illuminate\Database\Eloquent\Model;
 use Carbon\CarbonImmutable;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class AnalyticsPageViewStatistics
@@ -12,7 +12,6 @@ use Carbon\CarbonImmutable;
  */
 class AnalyticsPageViewStatistics extends Model
 {
-
     /**
      * The attributes that are mass assignable.
      *
@@ -21,19 +20,28 @@ class AnalyticsPageViewStatistics extends Model
     protected $fillable = [
         'time_window',
         'page',
-        'page_views'
+        'page_views',
     ];
 
+    public $timestamps = false;
+
+    protected $casts = [
+        'time_window' => 'datetime',
+    ];
 
     public function scopeFilter($query, $period = 'today')
     {
+        if (! in_array($period, PageView::PERIODS, true)) {
+            $period = 'today';
+        }
+
         $today = CarbonImmutable::today($this->getTimezone())
             ->setTimezone(config('app.timezone'));
 
-        if (! in_array($period, ['today', 'yesterday'])) {
-            [$interval, $unit] = explode('_', $period);
+        if (! in_array($period, ['today', 'yesterday'], true)) {
+            [$interval, $unit] = explode('_', $period, 2);
 
-            return $query->where('time_window', '>=', $today->sub($unit, $interval));
+            return $query->where('time_window', '>=', $today->sub($unit, (int) $interval));
         }
 
         if ($period === 'yesterday') {
@@ -46,7 +54,7 @@ class AnalyticsPageViewStatistics extends Model
     public function scopeUri($query, $uri = null)
     {
         $query->when(
-            $uri, 
+            $uri,
             function ($query, string $uri) {
                 $query->where('page', $uri);
             }
@@ -55,14 +63,6 @@ class AnalyticsPageViewStatistics extends Model
 
     public function getTimezone(): string
     {
-        $timezone = null;
-
-        if (isset(static::$timezoneResolver) && is_callable(static::$timezoneResolver)) {
-            $timezone = call_user_func(static::$timezoneResolver);
-        }
-
-        return empty($timezone)
-            ? config('app.timezone')
-            : $timezone;
+        return (new PageView())->getTimezone();
     }
 }

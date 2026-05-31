@@ -8,6 +8,15 @@ use Illuminate\Database\Eloquent\Model;
 
 class PageView extends Model
 {
+    public const PERIODS = [
+        'today',
+        'yesterday',
+        '1_week',
+        '30_days',
+        '6_months',
+        '12_months',
+    ];
+
     /**
      * The table associated with the model.
      *
@@ -62,13 +71,17 @@ class PageView extends Model
 
     public function scopeFilter($query, $period = 'today')
     {
+        if (! in_array($period, self::PERIODS, true)) {
+            $period = 'today';
+        }
+
         $today = CarbonImmutable::today($this->getTimezone())
             ->setTimezone(config('app.timezone'));
 
-        if (! in_array($period, ['today', 'yesterday'])) {
-            [$interval, $unit] = explode('_', $period);
+        if (! in_array($period, ['today', 'yesterday'], true)) {
+            [$interval, $unit] = explode('_', $period, 2);
 
-            return $query->where('created_at', '>=', $today->sub($unit, $interval));
+            return $query->where('created_at', '>=', $today->sub($unit, (int) $interval));
         }
 
         if ($period === 'yesterday') {

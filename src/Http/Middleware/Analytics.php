@@ -68,7 +68,7 @@ class Analytics
             'device' => $agent->deviceType(),
             'host' => $request->getHost(),
             ...array_map(
-                fn ($item) => substr($item, 0, 255),
+                fn ($item) => is_scalar($item) ? substr((string) $item, 0, 255) : null,
                 $request->only([
                     'utm_source',
                     'utm_medium',

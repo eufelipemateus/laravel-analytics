@@ -18,14 +18,12 @@
         }
     ],
     "require": {
-        "php": "^8.0|^8.1|^8.2|^8.3|^8.4|^8.5",
-        "ext-intl": "*",
-        "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0",
-        "illuminate/database": "^8.0|^9.0|^10.0|^11.0|^12.0",
-        "illuminate/collections": "^8.0|^9.0|^10.0|^11.0|^12.0",
-        "illuminate/http": "^8.0|^9.0|^10.0|^11.0|^12.0",
-        "illuminate/view": "^8.0|^9.0|^10.0|^11.0|^12.0",
-        "jenssegers/agent": "^2.6",
+        "php": "^8.0",
+        "illuminate/support": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/database": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/collections": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/http": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
+        "illuminate/view": "^8.0|^9.0|^10.0|^11.0|^12.0|^13.0",
         "jaybizzle/crawler-detect": "^1.2",
         "doctrine/dbal": "^3.0",
         "mobiledetect/mobiledetectlib": "^2.7.6"
@@ -48,11 +46,13 @@
             ]
         }
     },
-    "minimum-stability": "dev",
     "prefer-stable": true,
+    "suggest": {
+        "ext-intl": "Formats detected country codes as readable country names."
+    },
     "require-dev": {
-        "orchestra/testbench": "6.0|^9.0",
-        "phpunit/phpunit": "^9.5|^11.0"
+        "orchestra/testbench": "^6.0|^7.0|^8.0|^9.0|^10.0|^11.0",
+        "phpunit/phpunit": "^9.6|^10.5|^11.5.50|^12.5.8"
     },
     "scripts": {
         "test": "vendor/bin/phpunit"

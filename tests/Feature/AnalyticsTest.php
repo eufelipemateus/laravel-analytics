@@ -34,7 +34,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(1, PageView::all());
-        $this->assertDatabaseHas('page_views', [
+        $this->assertDatabaseHas('analytics_page_views', [
             'uri' => '/test',
             'device' => 'desktop',
         ]);
@@ -50,7 +50,7 @@ class AnalyticsTest extends TestCase
         (new Analytics())->handle($request, fn ($req) => null);
 
         $this->assertCount(0, PageView::all());
-        $this->assertDatabaseMissing('page_views', [
+        $this->assertDatabaseMissing('analytics_page_views', [
             'uri' => '/page',
         ]);
     }
@@ -67,7 +67,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(1, PageView::all());
-        $this->assertDatabaseHas('page_views', [
+        $this->assertDatabaseHas('analytics_page_views', [
             'uri' => '/test/∗︎',
             'device' => 'desktop',
         ]);
@@ -82,7 +82,7 @@ class AnalyticsTest extends TestCase
         (new Analytics())->handle($request, fn ($req) => null);
 
         $this->assertCount(0, PageView::all());
-        $this->assertDatabaseMissing('page_views', [
+        $this->assertDatabaseMissing('analytics_page_views', [
             'uri' => '/analytics/123',
         ]);
     }
@@ -97,7 +97,7 @@ class AnalyticsTest extends TestCase
         (new Analytics())->handle($request, fn ($req) => null);
 
         $this->assertCount(0, PageView::all());
-        $this->assertDatabaseMissing('page_views', [
+        $this->assertDatabaseMissing('analytics_page_views', [
             'uri' => '/users',
         ]);
     }
@@ -117,7 +117,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(1, PageView::all());
-        $this->assertDatabaseHas('page_views', [
+        $this->assertDatabaseHas('analytics_page_views', [
             'uri' => '/test',
             'device' => 'robot',
         ]);
@@ -138,7 +138,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(0, PageView::all());
-        $this->assertDatabaseMissing('page_views', [
+        $this->assertDatabaseMissing('analytics_page_views', [
             'uri' => '/test',
         ]);
     }
@@ -157,7 +157,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(0, PageView::all());
-        $this->assertDatabaseMissing('page_views', [
+        $this->assertDatabaseMissing('analytics_page_views', [
             'uri' => '/test',
         ]);
     }
@@ -180,7 +180,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(1, PageView::all());
-        $this->assertDatabaseHas('page_views', [
+        $this->assertDatabaseHas('analytics_page_views', [
             'uri' => '/test',
             'device' => 'desktop',
             'utm_source' => 'test-source',
@@ -206,7 +206,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(1, PageView::all());
-        $this->assertDatabaseHas('page_views', [
+        $this->assertDatabaseHas('analytics_page_views', [
             'uri' => '/test',
             'device' => 'desktop',
             'utm_source' => substr($string, 0, 255),
@@ -241,7 +241,7 @@ class AnalyticsTest extends TestCase
         });
 
         $this->assertCount(1, PageView::all());
-        $this->assertDatabaseHas('page_views', [
+        $this->assertDatabaseHas('analytics_page_views', [
             'uri' => '/test',
             'device' => null,
             'host' => null,
@@ -250,6 +250,22 @@ class AnalyticsTest extends TestCase
             'utm_campaign' => 'test-campaign',
             'utm_term' => null,
             'utm_content' => 'test-content',
+        ]);
+    }
+
+    #[Test]
+    public function malformed_utm_details_are_ignored()
+    {
+        $request = Request::create('/test', 'GET', [
+            'utm_source' => ['unexpected-array-value'],
+        ]);
+        $request->setLaravelSession($this->app['session']->driver());
+
+        (new Analytics())->handle($request, fn ($req) => null);
+
+        $this->assertDatabaseHas('analytics_page_views', [
+            'uri' => '/test',
+            'utm_source' => null,
         ]);
     }
 }
